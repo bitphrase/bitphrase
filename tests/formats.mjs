@@ -119,6 +119,8 @@ const ADDRESSES = [
   ['0xD1220A0cf47c7B9Be7A2E6BA89F429762e7b9aDb', 'Ethereum', 'd1220a0cf47c7b9be7a2e6ba89f429762e7b9adb'],
   ['rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh', 'XRP (Ripple)', null],
   ['11111111111111111111111111111111', 'Solana', '0000000000000000000000000000000000000000000000000000000000000000'],
+  // A TON address made of base58 letters only (no 0 O I l + / - _): once mistaken for base58
+  ['EQA2qsKZ2oNYwdRxZuBiTbERfGjCvQbh91Zn5JC6o17to3Rm', 'TON', null],
 ];
 for (const [addr, name, payload] of ADDRESSES) {
   const b = F.toBytes('address', '', addr);

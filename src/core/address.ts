@@ -209,7 +209,8 @@ function parse(input: string): { id: number; payload: Uint8Array } | string {
   }
   const raw = /^(-1|0):([0-9a-f]{64})$/i.exec(a);
   if (raw) return net(15, Uint8Array.from([0, raw[1] === '-1' ? 0xff : 0, ...raw[2]!.match(/../g)!.map((x) => parseInt(x, 16))]));
-  if (/^[A-Za-z0-9_+/-]{48}$/.test(a) && !/^[1-9A-HJ-NP-Za-km-z]+$/.test(a)) {
+  // 48 characters: longer than any base58 address here (≤ 44), so a TON address may use base58 letters only.
+  if (/^[A-Za-z0-9_+/-]{48}$/.test(a)) {
     const b = b64decode(a);
     if (b && b.length === 36 && TON_FLAGS.includes(b[0]!) && (b[1] === 0 || b[1] === 0xff)) {
       return crc16(b.slice(0, 34)) === ((b[34]! << 8) | b[35]!) ? net(15, b.slice(0, 34)) : tr('Адрес TON не проходит проверку контрольной суммы — вероятно, ошибка в символе.', 'The TON address fails the checksum — probably a typo in a character.');

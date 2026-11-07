@@ -45,7 +45,8 @@ jobs:
 
       - run: npm ci
       - run: npm run typecheck
-      - run: npm test
+      # A release gets every template and the large random samples (minutes); pushes run the quick npm test.
+      - run: npm run test:full
       - run: npm run build
       - run: npm run test:browser
 

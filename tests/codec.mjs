@@ -3,13 +3,22 @@
  * from generalized templates; every 8 bytes — 7 words, the remainder — a shorter sentence.
  * Every check runs for each phrase language.
  *
- * All templates (each is rendered and strictly parsed back); every scheme for 1–8 bytes
+ * Templates (each is rendered and strictly parsed back); every scheme for 1–8 bytes
  * (length, variants, every variant gives the same bytes); random lengths 1–100 with and
  * without full stops; independent sentences; tolerance (case, letter variants, punctuation,
  * a typo); false acceptance when a word is swapped; errors; telling the language apart.
+ *
+ * By default a quick run: a random sample of templates and fewer random values. `--full`
+ * (npm run test:full) checks every template three times and many more values; it takes minutes.
+ * Encoding is the slow part (every variant is parsed back), parsing is cheap — so the typo
+ * and swapped-word checks take all variants of a few encoded values.
  */
 import { randomBytes, randomInt } from 'node:crypto';
 import { checker, load } from '../tools/load.mjs';
+
+const FULL = process.argv.includes('--full');
+/** Sample size: quick run or --full. */
+const N = (quick, full) => (FULL ? full : quick);
 
 const L = await load('lang/index');
 const versions = { ru: (await load('lang/ru/grammar')).DICT_VERSION, en: (await load('lang/en/grammar')).DICT_VERSION };
@@ -48,12 +57,14 @@ for (const [lang, T] of Object.entries(LANGS)) {
   check(`${lang}: checksum of 9+ bits for every size`, info.schemes.every((s) => s.checkBits >= 9), true);
   check(`${lang}: 64+ variants for every size`, info.schemes.every((s) => s.variants[0] >= 64), true);
 
-  // --- every template: random digits -> words -> strict parsing finds the same digits
+  // --- templates: random digits -> words -> strict parsing finds the same digits
+  const templates = FULL ? C.TEMPLATES : Array.from({ length: 500 }, () => C.TEMPLATES[randomInt(C.TEMPLATES.length)]);
+  const perTemplate = N(1, 3);
   let badWords = 0;
   let badRecover = 0;
   const sample = [];
-  for (const t of C.TEMPLATES) {
-    for (let k = 0; k < 3; k += 1) {
+  for (const t of templates) {
+    for (let k = 0; k < perTemplate; k += 1) {
       const digits = t.slots.map((s) => randomInt(s.radix));
       if (C._internal.renderWords(t, digits).length !== t.words) badWords += 1;
       if (!C._internal.recoverable(t, digits)) {
@@ -63,8 +74,9 @@ for (const [lang, T] of Object.entries(LANGS)) {
     }
   }
   if (sample.length) console.log(`  not recoverable, e.g.:\n    ${sample.join('\n    ')}`);
-  check(`${lang}: every template has as many words as digits`, badWords, 0);
-  check(`${lang}: the digits of every template are recovered from its words (3 x all templates)`, badRecover, 0);
+  const which = FULL ? `${perTemplate} x all templates` : `${templates.length} random templates`;
+  check(`${lang}: every template has as many words as digits (${which})`, badWords, 0);
+  check(`${lang}: the digits of every template are recovered from its words (${which})`, badRecover, 0);
 
   // --- every scheme: length, variants, all variants give the same bytes
   for (let r = 1; r <= 8; r += 1) {
@@ -73,7 +85,7 @@ for (const [lang, T] of Object.entries(LANGS)) {
     let distinct = 0;
     let lengthOk = 0;
     const counts = [];
-    const runs = r <= 2 ? 40 : 15;
+    const runs = r <= 2 ? N(10, 40) : N(4, 15);
     for (let i = 0; i < runs; i += 1) {
       const bytes = randomBytes(r);
       const { variants } = C.encode(bytes);
@@ -93,17 +105,18 @@ for (const [lang, T] of Object.entries(LANGS)) {
   check(`${lang}: 1 byte — all 256 values parse`, Array.from({ length: 256 }, (_, i) => same(C.decode(C.encode(Uint8Array.of(i)).sentences[0]), Uint8Array.of(i))).every(Boolean), true);
 
   // --- random lengths 1–100, with and without full stops
+  const lengths = N(10, 150);
   let ok = 0;
   let okNoDots = 0;
-  for (let i = 0; i < 150; i += 1) {
+  for (let i = 0; i < lengths; i += 1) {
     const bytes = randomBytes(1 + randomInt(100));
     const { sentences, bytes: sizes } = C.encode(bytes);
     if (sentences.length !== Math.ceil(bytes.length / 8) || sizes.slice(0, -1).some((n) => n !== 8)) continue;
     ok += same(C.decode(sentences.join(' ')), bytes);
     okNoDots += same(C.decode(sentences.join(' ').replace(/\./g, '')), bytes);
   }
-  check(`${lang}: 1–100 bytes with full stops (150 random)`, ok, 150);
-  check(`${lang}: 1–100 bytes without full stops — split by 7 words`, okNoDots, 150);
+  check(`${lang}: 1–100 bytes with full stops (${lengths} random)`, ok, lengths);
+  check(`${lang}: 1–100 bytes without full stops — split by 7 words`, okNoDots, lengths);
   const mixed = C.encode(randomBytes(19));
   check(`${lang}: different variants in different sentences`, same(C.decode(mixed.variants.map((l, i) => l[Math.min(l.length - 1, 5 * i + 3)].text).join(' ')), C.decode(mixed.sentences.join(' ')).bytes), true);
 
@@ -122,11 +135,16 @@ for (const [lang, T] of Object.entries(LANGS)) {
   check(`${lang}: look-alike letters of the other alphabet`, same(C.decode(T.lookalikes(phrase)), sample19), true);
   if (lang === 'en') check('en: a possessive without the apostrophe', same(C.decode(phrase.replace(/'/g, '')), sample19), true);
 
+  /** [bytes, words] for the first perValue variants of `values` random r-byte values. */
+  const variantSentences = (r, values, perValue = Infinity) =>
+    Array.from({ length: values }, () => {
+      const bytes = randomBytes(r);
+      return C.encode(bytes).variants[0].slice(0, perValue).map((v) => [bytes, words(v.text)]);
+    }).flat();
+
   let typoFixed = 0;
   let typoTried = 0;
-  for (let i = 0; i < 200; i += 1) {
-    const bytes = randomBytes(8);
-    const w = words(C.encode(bytes).sentences[0]);
+  for (const [bytes, w] of variantSentences(8, N(4, 20), 15)) {
     const j = w.findLastIndex((x, k) => k > 0 && x.length > 4 && !x.includes("'"));
     if (j < 0) continue;
     w[j] = T.typo(w[j]);
@@ -141,9 +159,8 @@ for (const [lang, T] of Object.entries(LANGS)) {
   for (const r of [1, 2, 3, 8]) {
     let wrong = 0;
     let tried = 0;
-    for (let i = 0; i < 600; i += 1) {
-      const bytes = randomBytes(r);
-      const w = words(C.encode(bytes).sentences[0]);
+    // ~1500 tries even in the quick run: at a rate of ~0.5% fewer would make the < 1% check flaky.
+    for (const [bytes, w] of variantSentences(r, N(12, 40))) {
       const j = randomInt(w.length);
       const other = pool[randomInt(pool.length)];
       if (other === w[j].toLowerCase()) continue;

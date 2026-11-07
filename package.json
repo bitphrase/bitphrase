@@ -1,6 +1,6 @@
 {
   "name": "bitphrase",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "Card numbers, phone numbers, passwords, crypto seeds and wallet addresses ↔ funny, memorable sentences. Offline: a single HTML file and an installable PWA.",
   "license": "MIT",
@@ -14,6 +14,7 @@
     "watch": "node build.mjs --watch",
     "typecheck": "tsc --noEmit",
     "test": "node tests/morph.mjs && node tests/codec.mjs && node tests/formats.mjs",
+    "test:full": "node tests/morph.mjs && node tests/codec.mjs --full && node tests/formats.mjs",
     "test:browser": "npm run test:page && npm run test:pwa",
     "test:page": "node tests/app.mjs",
     "test:pwa": "node tests/pwa.mjs",
