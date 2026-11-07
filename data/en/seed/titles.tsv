@@ -1,0 +1,46 @@
+title	gender	with	comment
+mr	m	surname	British style, no full stop: a full stop would end the sentence
+mrs	f	surname	
+ms	f	surname	
+miss	f	surname	
+doctor	n	surname	
+professor	n	surname	
+captain	n	surname	
+officer	n	surname	
+detective	n	surname	
+agent	n	surname	
+coach	n	surname	
+judge	n	surname	
+nurse	n	surname	
+chef	n	surname	
+sergeant	n	surname	
+major	n	surname	
+colonel	n	surname	
+general	n	surname	
+lieutenant	n	surname	
+inspector	n	surname	
+sheriff	n	surname	
+mayor	n	surname	
+governor	n	surname	
+senator	n	surname	
+dean	n	surname	
+admiral	n	surname	
+commander	n	surname	
+director	n	surname	
+nanny	f	surname	
+lord	m	surname	
+lady	f	both	
+duke	m	surname	
+duchess	f	surname	
+baron	m	surname	
+baroness	f	surname	
+prince	m	both	
+princess	f	both	
+uncle	m	both	
+aunt	f	both	
+cousin	n	both	
+grandpa	m	both	
+grandma	f	both	
+brother	m	name	
+sister	f	name	
+sir	m	name	only with a first name: Sir John, not Sir Smith

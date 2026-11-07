@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en" data-theme="auto">
+<head>
+<meta charset="utf-8">
+<!-- viewport-fit=cover hands the notch and the home indicator over to env(safe-area-inset-*);
+     resizes-content — Chrome on Android shrinks the page instead of covering it with the keyboard. -->
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<!-- Nothing leaves the page: no requests, no outside images or fonts, no form submission. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; form-action 'none'; base-uri 'none'">
+<meta name="referrer" content="no-referrer">
+<title>Bitphrase</title>
+<link rel="icon" href="__ICON__">
+<style>/*__STYLES__*/</style>
+</head>
+<body>
+<!-- Texts with data-i18n are filled in by src/app/strings.ts in the chosen language. -->
+<header class="top">
+  <img class="logo" src="__ICON__" alt="">
+  <div>
+    <h1>Bitphrase</h1>
+    <p class="sub" data-i18n="subtitle"></p>
+  </div>
+  <div class="prefs">
+    <label class="theme"><span data-i18n="language"></span>
+      <select id="ui-lang">
+        <option value="ru" lang="ru">Русский</option>
+        <option value="en" lang="en">English</option>
+      </select>
+    </label>
+    <label class="theme"><span data-i18n="theme"></span>
+      <select id="theme">
+        <option value="auto" data-i18n="themeAuto"></option>
+        <option value="light" data-i18n="themeLight"></option>
+        <option value="dark" data-i18n="themeDark"></option>
+      </select>
+    </label>
+  </div>
+</header>
+
+<nav class="tabs" role="tablist" data-i18n-aria="mode">
+  <button type="button" role="tab" id="tab-enc" aria-controls="enc-pane" aria-selected="true" data-i18n="tabEncode"></button>
+  <button type="button" role="tab" id="tab-dec" aria-controls="dec-pane" aria-selected="false" tabindex="-1" data-i18n="tabDecode"></button>
+</nav>
+
+<main class="main">
+  <section class="pane" id="enc-pane" role="tabpanel" aria-labelledby="tab-enc">
+    <div class="format-row">
+      <label class="field">
+        <span data-i18n="encFormat"></span>
+        <select id="enc-format"></select>
+      </label>
+      <label class="field" id="enc-sub-wrap" hidden>
+        <span data-i18n="subFormat"></span>
+        <select id="enc-sub"></select>
+      </label>
+    </div>
+    <label class="field" id="value-field">
+      <span id="value-label"></span>
+      <textarea id="value-in" rows="2" spellcheck="false" autocomplete="off"></textarea>
+    </label>
+    <div id="seed-entry" hidden>
+      <div class="field">
+        <span class="field-title" data-i18n="seedKindTitle"></span>
+        <div class="seed-kinds" id="seed-kinds" role="radiogroup" data-i18n-aria="seedKindAria"></div>
+      </div>
+      <div class="field">
+        <label for="seed-in" data-i18n="seedWords"></label>
+        <div class="token-box seed-box" id="seed-box">
+          <div class="tokens" id="seed-tokens">
+            <input id="seed-in" class="token-input" type="text" spellcheck="false" autocomplete="off" autocapitalize="none" autocorrect="off" enterkeyhint="next" role="combobox" aria-autocomplete="list" aria-controls="seed-suggest">
+          </div>
+          <button type="button" id="seed-clear" class="token-clear" data-i18n-aria="clearPhrase" data-i18n-title="clear">×</button>
+          <ul id="seed-suggest" class="suggest-list" role="listbox" hidden></ul>
+        </div>
+        <p class="muted hint" id="seed-progress"></p>
+      </div>
+    </div>
+    <div class="row">
+      <button type="button" id="example" data-i18n="example"></button>
+      <label class="len" id="len-wrap"><input type="number" id="random-len" min="1" max="100" value="8" inputmode="numeric"> <span data-i18n="bytesUnit"></span></label>
+    </div>
+    <p id="enc-error" class="error" hidden></p>
+    <div id="bytes-box" class="bytes-box" hidden>
+      <div class="muted" id="bytes-note"></div>
+      <pre class="hex" id="bytes-hex"></pre>
+    </div>
+    <div id="phrase-box" class="phrase-box" hidden>
+      <div class="phrase-label" id="phrase-label"></div>
+      <div id="phrase-out" class="sentence"></div>
+      <p id="phrase-check" class="check-line" aria-live="polite"></p>
+      <div class="row">
+        <button type="button" id="copy-phrase" class="primary" data-i18n="copyPhrase"></button>
+        <button type="button" id="check-phrase" data-i18n="checkPhrase"></button>
+      </div>
+    </div>
+    <div id="sentences" aria-live="polite"></div>
+  </section>
+
+  <section class="pane" id="dec-pane" role="tabpanel" aria-labelledby="tab-dec" hidden>
+    <div class="format-row">
+      <label class="field">
+        <span data-i18n="decFormat"></span>
+        <select id="dec-format"></select>
+      </label>
+      <label class="field" id="dec-sub-wrap" hidden>
+        <span data-i18n="subFormat"></span>
+        <select id="dec-sub"></select>
+      </label>
+    </div>
+    <div class="field">
+      <label for="phrase-in" data-i18n="phraseIn"></label>
+      <div class="token-box" id="token-box">
+        <div class="tokens" id="tokens">
+          <input id="phrase-in" class="token-input" type="text" spellcheck="false" autocomplete="off" autocapitalize="none" autocorrect="off" enterkeyhint="next" role="combobox" aria-autocomplete="list" aria-controls="suggest-list">
+        </div>
+        <button type="button" id="clear-phrase" class="token-clear" data-i18n-aria="clearPhrase" data-i18n-title="clear">×</button>
+        <ul id="suggest-list" class="suggest-list" role="listbox" hidden></ul>
+      </div>
+      <p class="muted hint" data-i18n="phraseHint"></p>
+    </div>
+    <div id="dec-result" aria-live="polite"></div>
+  </section>
+</main>
+
+<footer class="foot">
+  <p id="facts"></p>
+  <p class="muted" data-i18n="disclaimer"></p>
+  <!-- Filled in only in the PWA (build/pages/): checking for and installing updates, src/app/update.ts. -->
+  <p class="muted"><span data-i18n="version"></span> <span id="version"></span> <span id="update-line" hidden></span></p>
+</footer>
+<div id="toast" class="toast" role="status" hidden></div>
+<script>/*__APP__*/</script>
+</body>
+</html>

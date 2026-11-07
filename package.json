@@ -1,0 +1,27 @@
+{
+  "name": "bitphrase",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Card numbers, phone numbers, passwords, crypto seeds and wallet addresses ↔ funny, memorable sentences. Offline: a single HTML file and an installable PWA.",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dicts": ".venv/bin/python -I tools/data/export_app_dicts.py",
+    "build": "node build.mjs",
+    "watch": "node build.mjs --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "node tests/morph.mjs && node tests/codec.mjs && node tests/formats.mjs",
+    "test:browser": "npm run test:page && npm run test:pwa",
+    "test:page": "node tests/app.mjs",
+    "test:pwa": "node tests/pwa.mjs",
+    "icons": "node tools/icons.mjs",
+    "check": "npm run typecheck && npm test && npm run build && npm run test:browser"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.12",
+    "typescript": "^5.9.3"
+  }
+}
