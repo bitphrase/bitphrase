@@ -16,9 +16,8 @@
  * consecutively: P ∈ [0, S_w), each template owns a segment, so a template comes up with
  * probability cap(t)/S_w. For r bytes, the bytes and a variant number (v bits) go through
  * a reversible mix (a Feistel network) giving X < 2^(8r+v), and P = base + X·K + h with
- * h = hash mod K — log2 K bits of checksum. 64–100 variants (out of 128 candidates) or,
- * where the words have room, 64–200 (out of 256); how many exactly depends on the bytes.
- * Parsing accepts any candidate.
+ * h = hash mod K — log2 K bits of checksum. 128 variants or, where the words have room,
+ * 256; every one that passes the round-trip check is shown. Parsing accepts any of them.
  */
 import { levenshtein } from './text';
 
@@ -78,18 +77,17 @@ export interface Grammar<S extends Slot = Slot, T extends Template<S> = Template
 
 export const MAX_BYTES = 100;
 /**
- * Words per sentence for 1…8 bytes — enough for 64+ variants. 3 and 4 bytes share
+ * Words per sentence for 1…8 bytes — enough for 128+ variants. 3 and 4 bytes share
  * 4-word templates, 6 and 7 bytes share 6-word ones: each size has its own range of numbers.
  */
 export const WORDS_FOR_BYTES = [0, 2, 3, 4, 4, 5, 6, 6, 7];
-export const VARIANTS_MIN = 64;
 /**
- * Bits for variants and checksum: 8 bits (256 candidates, 64–200 shown) if the checksum
- * keeps at least 10 bits; otherwise 7 bits (128 candidates, 64–100) with at least 9.
+ * Bits for variants and checksum: 8 bits (256 variants) if the checksum keeps at least
+ * 10 bits; otherwise 7 bits (128 variants) with at least 9.
  */
 const VARIANT_PLANS = [
-  { bits: 8, check: 10, max: 200 },
-  { bits: 7, check: 9, max: 100 },
+  { bits: 8, check: 10 },
+  { bits: 7, check: 9 },
 ];
 /** No size has a weaker checksum. */
 export const MIN_CHECK = 9;
@@ -98,8 +96,6 @@ export interface Scheme {
   bytes: number;
   words: number;
   variantBits: number;
-  /** How many variants to show: from VARIANTS_MIN to variantsMax. */
-  variantsMax: number;
   K: bigint;
   /** Range of numbers among phrases of this length: [base, base + size). */
   base: bigint;
@@ -241,7 +237,7 @@ export function createCodec<S extends Slot, T extends Template<S>>(g: Grammar<S,
         const width = 8 * r + v;
         const size = K << BigInt(width);
         out[r] = {
-          bytes: r, words: w, variantBits: v, variantsMax: plan.max, K, base, size,
+          bytes: r, words: w, variantBits: v, K, base, size,
           A: BigInt(Math.ceil(width / 2)), B: BigInt(Math.floor(width / 2)), checkBits: Math.log2(Number(K)),
         };
         base += size;
@@ -279,10 +275,6 @@ export function createCodec<S extends Slot, T extends Template<S>>(g: Grammar<S,
   /** The checksum covers only the sentence's own bytes: sentences are independent. */
   function checksum(s: Scheme, n: bigint, variant: number): bigint {
     return hash64([...TAG, 0xcc, s.bytes, variant, ...chunkBytes(n, s.bytes)]) % s.K;
-  }
-  /** How many variants to show: VARIANTS_MIN to variantsMax, "as luck has it" (depends on the bytes). */
-  function variantCount(s: Scheme, n: bigint): number {
-    return VARIANTS_MIN + Number(hash64([...TAG, 0xaa, s.bytes, ...chunkBytes(n, s.bytes)]) % BigInt(s.variantsMax - VARIANTS_MIN + 1));
   }
 
   // --- templates --------------------------------------------------------------------------
@@ -363,14 +355,13 @@ export function createCodec<S extends Slot, T extends Template<S>>(g: Grammar<S,
   }
 
   /**
-   * Variants of a sentence for r bytes (n — their value). Each one is parsed back before it
-   * is shown; one that fails the check is skipped and the next candidate is taken.
+   * Variants of a sentence for r bytes (n — their value): every variant number. Each one is
+   * parsed back before it is shown; one that fails the check is skipped.
    */
   function variantsOf(n: bigint, r: number): Variant[] {
     const s = scheme(r);
-    const want = variantCount(s, n);
     const out: Variant[] = [];
-    for (let v = 0; out.length < want && v < 1 << s.variantBits; v += 1) {
+    for (let v = 0; v < 1 << s.variantBits; v += 1) {
       const x = mix(s, (n << BigInt(s.variantBits)) | BigInt(v));
       const p = s.base + x * s.K + checksum(s, n, v);
       const t = templateAt(s.words, p);
@@ -635,7 +626,7 @@ export function createCodec<S extends Slot, T extends Template<S>>(g: Grammar<S,
       schemes: SCHEMES.filter(Boolean).map((s) => ({
         bytes: s.bytes,
         words: s.words,
-        variants: [VARIANTS_MIN, s.variantsMax],
+        variants: 1 << s.variantBits,
         checkBits: s.checkBits,
       })),
       sizes: g.sizes,

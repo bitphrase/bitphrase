@@ -1,6 +1,6 @@
 {
   "name": "bitphrase",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": true,
   "description": "Card numbers, phone numbers, passwords, crypto seeds and wallet addresses ↔ funny, memorable sentences. Offline: a single HTML file and an installable PWA.",
   "license": "MIT",

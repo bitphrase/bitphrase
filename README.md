@@ -28,8 +28,8 @@ Policy blocks them (`connect-src 'none'`).
 - **Grammatical sentences.** Verbs take the right objects and prepositions. Russian words
   carry the right case, gender and number; English gets agreement, a/an and possessives.
   The meaning may be absurd, but the grammar is always correct.
-- **64–200 variants per sentence.** All variants decode to the same bytes, so you can pick
-  the one you find easiest to remember.
+- **128 or 256 variants per sentence.** All variants decode to the same bytes, so you can
+  pick the one you find easiest to remember.
 - **A checksum in every sentence** (9.5–13.6 bits). A mistyped or swapped word is almost
   always caught.
 - **Tolerant decoding.** Case, `ё`/`е`, punctuation and look-alike Latin/Cyrillic letters
@@ -159,9 +159,9 @@ digits = mixed-radix digits of (P − start(t))
   It gives 9.5–13.6 bits per sentence, so a random wrong sentence passes with a chance of
   about 1 in 700 to 1 in 12,000. The checksum covers only the sentence's own bytes, so
   sentences are independent of each other.
-- **Variants.** There are 7 variant bits (128 candidates, 64–100 shown) or 8 (256
-  candidates, 64–200 shown). Each length gets the larger plan if the checksum can keep at
-  least 10 bits. The number shown depends on the bytes, through a hash.
+- **Variants.** There are 7 variant bits (128 variants) or 8 (256 variants). Each length
+  gets the larger plan if the checksum can keep at least 10 bits; otherwise it gets fewer
+  variants rather than a weaker checksum. All variants are shown.
 - **Round-trip check.** Before a variant is shown, it is parsed back strictly. A candidate
   that fails (for example, because two word forms coincide) is skipped.
 

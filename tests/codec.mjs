@@ -52,10 +52,10 @@ for (const [lang, T] of Object.entries(LANGS)) {
   const C = L.codec(lang);
   const info = C.summary();
   console.log(`  [${lang}] ${info.templates} templates; schemes:`);
-  for (const s of info.schemes) console.log(`    ${s.bytes} B -> ${s.words} w., variants ${s.variants[0] === s.variants[1] ? s.variants[0] : s.variants.join('–')}, checksum ${s.checkBits.toFixed(1)} bits`);
+  for (const s of info.schemes) console.log(`    ${s.bytes} B -> ${s.words} w., variants ${s.variants}, checksum ${s.checkBits.toFixed(1)} bits`);
   check(`${lang}: words for 1…8 bytes`, info.schemes.map((s) => s.words), [2, 3, 4, 4, 5, 6, 6, 7]);
   check(`${lang}: checksum of 9+ bits for every size`, info.schemes.every((s) => s.checkBits >= 9), true);
-  check(`${lang}: 64+ variants for every size`, info.schemes.every((s) => s.variants[0] >= 64), true);
+  check(`${lang}: 128 or 256 variants for every size`, info.schemes.every((s) => s.variants === 128 || s.variants === 256), true);
 
   // --- templates: random digits -> words -> strict parsing finds the same digits
   const templates = FULL ? C.TEMPLATES : Array.from({ length: 500 }, () => C.TEMPLATES[randomInt(C.TEMPLATES.length)]);
@@ -95,9 +95,9 @@ for (const [lang, T] of Object.entries(LANGS)) {
       if (list.every((v) => words(v.text).length === s.words)) lengthOk += 1;
       if (list.every((v) => same(C.decode(v.text), bytes))) okAll += 1;
     }
-    const [lo, hi] = s.variants;
     check(`${lang} ${r} B: ${s.words} w. in every variant`, lengthOk, runs);
-    check(`${lang} ${r} B: ${lo}–${hi} variants`, counts.every((n) => n >= lo && n <= hi), true);
+    // All variant numbers are shown; only a rare one that fails the round-trip check is dropped.
+    check(`${lang} ${r} B: ${s.variants} variants (a few may be dropped)`, counts.every((n) => n <= s.variants && n >= s.variants * 0.9), true);
     check(`${lang} ${r} B: variants don't repeat`, distinct, runs);
     check(`${lang} ${r} B: every variant parses into the same bytes`, okAll, runs);
   }

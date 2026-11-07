@@ -683,9 +683,9 @@ function renderFacts() {
   const sizes = Object.entries(info.sizes).map(([k, n]) => `${SIZE_TITLE[k]?.[i] ?? k} ${num(n)}`).join(', ');
   $('facts').textContent = tr(
     `Шаблонов ${num(info.templates)}; шаблон выпадает тем чаще, чем больше у него комбинаций. Длина: ${lengths}; больше 8 байт — несколько независимых предложений. ` +
-      `Вариантов: ${info.schemes.map((s) => s.variants.join('–')).join(' / ')}; контроль ${info.schemes.map((s) => num(s.checkBits, 1)).join(' / ')} бит. Словари: ${sizes}.`,
+      `Вариантов: ${info.schemes.map((s) => s.variants).join(' / ')}; контроль ${info.schemes.map((s) => num(s.checkBits, 1)).join(' / ')} бит. Словари: ${sizes}.`,
     `${num(info.templates)} templates; a template comes up the more often, the more combinations it has. Length: ${lengths}; over 8 bytes — several independent sentences. ` +
-      `Variants: ${info.schemes.map((s) => s.variants.join('–')).join(' / ')}; checksum ${info.schemes.map((s) => num(s.checkBits, 1)).join(' / ')} bits. Dictionaries: ${sizes}.`,
+      `Variants: ${info.schemes.map((s) => s.variants).join(' / ')}; checksum ${info.schemes.map((s) => num(s.checkBits, 1)).join(' / ')} bits. Dictionaries: ${sizes}.`,
   );
 }
 

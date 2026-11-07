@@ -90,7 +90,7 @@ try {
   check('8 bytes', hex8.length, 16);
   const pos = await text('.sentence-block .pager-pos');
   const total = Number(pos.split(' / ')[1]);
-  check('pager: "1 / N", at least 64 variants', pos.startsWith('1 / ') && total >= 64, true);
+  check('pager: "1 / N", at least 100 variants', pos.startsWith('1 / ') && total >= 100, true);
   const first = await text('#phrase-out');
   await click('.sentence-block .pager-next');
   check('"›" goes to the second variant', await text('.sentence-block .pager-pos'), `2 / ${total}`);
